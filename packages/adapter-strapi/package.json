@@ -1,0 +1,49 @@
+{
+  "name": "@auth/strapi-adapter",
+  "version": "1.0.0",
+  "description": "Strapi adapter for next-auth.",
+  "homepage": "https://authjs.dev",
+  "repository": "https://github.com/nextauthjs/next-auth",
+  "bugs": {
+    "url": "https://github.com/nextauthjs/next-auth/issues"
+  },
+  "author": "C Infinity Labs",
+  "contributors": [
+    "Henrik Sorensen <henrik.sorensen@cinifitysolutions.com>"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "next-auth",
+    "@auth",
+    "Auth.js",
+    "next.js",
+    "oauth",
+    "strapi"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "files": [
+    "*.d.ts*",
+    "*.js",
+    "src"
+  ],
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "./test/test.sh",
+    "build": "tsc",
+    "clean": "rm -rf *.js *.d.ts*"
+  },
+  "dependencies": {
+    "@auth/core": "workspace:*",
+    "axios": "^1.7.7",
+    "strapi-sdk-ts": "^1.0.2"
+  }
+}

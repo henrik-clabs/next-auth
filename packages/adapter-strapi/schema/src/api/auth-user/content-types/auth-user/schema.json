@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "auth_users",
+  "info": {
+    "singularName": "auth-user",
+    "pluralName": "auth-users",
+    "displayName": "AuthUser"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "attributes": {
+    "authuser_id": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "email_verified": {
+      "type": "string"
+    },
+    "image": {
+      "type": "string"
+    }
+  }
+}

@@ -4,9 +4,10 @@ CONTAINER_NAME=authjs-strapi-test
 IMAGE_NAME=authjs-strapi-image
 CONTAINER_PORT="1337:1337"
 
+# FROM node:18-alpine3.18
 
-cat << EOF >test/dockerfile
-FROM node:18-alpine3.18
+cat << EOF > test/dockerfile
+FROM node:20-alpine
 # Installing libvips-dev for sharp Compatibility
 RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git nano
 ARG NODE_ENV=development
@@ -19,26 +20,32 @@ WORKDIR /opt/app
 RUN chown -R node:node /opt/app
 USER node
 ENV DATABASE_CLIENT=sqlite
-ENV DATABASE_FILENAME=testauthdata
-RUN ["yarn","create","strapi","testauth","--no-git-init","--skip-cloud","--js","--no-run","--dbclient","sqlite","--example","--install"]
+ENV DATABASE_FILENAME=database/testauthdata.db
+RUN ["yarn", "create","strapi","testauth","--no-git-init","--skip-cloud","--js","--no-run","--dbclient","sqlite","--example","--install"]
 WORKDIR /opt/app/testauth
 RUN ["yarn", "build"]
 RUN ["yarn","strapi","admin:create","--email","strapi@noemail.com","--password","@uthStrap1","--firstname","strapi","--lastname","strapi"]
 RUN ["yarn","strapi","telemetry:disable"]
+# Create API Key
 COPY ./test/strapi_console_input.txt strapi_console_input.txt
 RUN echo ".load strapi_console_input.txt" | yarn strapi console
 RUN cat api_key.txt
+COPY --chown=node schema/src/api/auth-user src/api/auth-user
+COPY --chown=node schema/src/api/auth-session src/api/auth-session
+COPY --chown=node schema/src/api/auth-account src/api/auth-account
+COPY --chown=node schema/src/api/auth-verification-token src/api/auth-verification-token
 CMD ["yarn", "develop"]
 EOF
 
 
-cat << EOF >test/strapi_console_input.txt
+cat << EOF > test/strapi_console_input.txt
 const fs = require('node:fs');
 const attributes = { name: 'authjstest', description: 'Token for Auth.js strapi adapter testing', type: 'full-access',lifespan: null, };
 const apiToken = await strapi.service('admin::api-token').create(attributes);
 const out = "API_KEY=" + apiToken.accessKey;
 await fs.writeFileSync('api_key.txt', out);
 EOF
+
 
 # Build image
 
@@ -50,22 +57,27 @@ if [ $RC -ne 0 ]; then
   exit 1
 fi
 
+##- if false; then
+
 # extract api key for tests
-key=`docker run --rm \
+KEY=`docker run --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME} \
   cat api_key.txt | grep API_ `
 
-echo "Found key: $key..."
+#echo "Found key: $KEY..."
 
 docker run -d --rm \
   --name ${CONTAINER_NAME} \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME}
 
-
+##- fi
 echo "waiting 5s for db to start..."
 sleep 5
+
+# Setup Environment, add API_KEY to .env.local
+echo $KEY >> .env.local
 
 # Always stop container, but exit with 1 when tests are failing
 if vitest run -c ../utils/vitest.config.ts; then
@@ -75,3 +87,6 @@ else
   echo "Tests failed... Stopping container..."
   docker stop ${CONTAINER_NAME} && exit 1
 fi
+
+
+# docker run -ti -p 1337:1337 --hostname strapi --name strapi authjs-strapi-image

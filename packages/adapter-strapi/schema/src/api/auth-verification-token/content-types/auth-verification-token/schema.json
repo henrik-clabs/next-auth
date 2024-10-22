@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "auth_verification_tokens",
+  "info": {
+    "singularName": "auth-verification-token",
+    "pluralName": "auth-verification-tokens",
+    "displayName": "AuthVerificationToken"
+  },
+  "options": {
+    "comment": ""
+  },
+  "attributes": {
+    "identifier": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "expires": {
+      "type": "string"
+    }
+  }
+}

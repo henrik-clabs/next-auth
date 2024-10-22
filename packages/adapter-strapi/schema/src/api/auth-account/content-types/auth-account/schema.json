@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "auth_accounts",
+  "info": {
+    "singularName": "auth-account",
+    "pluralName": "auth-accounts",
+    "displayName": "AuthAccount"
+  },
+  "options": {
+    "comment": ""
+  },
+  "attributes": {
+    "authaccount_id": {
+      "type": "string"
+    },
+    "userid": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "provider_accountid": {
+      "type": "string"
+    },
+    "refresh_token": {
+      "type": "string"
+    },
+    "access_token": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "integer"
+    },
+    "token_type": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "id_token": {
+      "type": "string"
+    },
+    "session_state": {
+      "type": "string"
+    }
+  }
+}

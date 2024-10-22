@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "auth_sessions",
+  "info": {
+    "singularName": "auth-session",
+    "pluralName": "auth-sessions",
+    "displayName": "AuthSession"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "attributes": {
+    "expires": {
+      "type": "string"
+    },
+    "session_token": {
+      "type": "string"
+    },
+    "userid": {
+      "type": "string"
+    }
+  }
+}
