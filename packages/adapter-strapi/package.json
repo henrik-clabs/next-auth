@@ -44,6 +44,7 @@
   "dependencies": {
     "@auth/core": "workspace:*",
     "axios": "^1.7.7",
+    "properties-reader": "^2.3.0",
     "strapi-sdk-ts": "^1.0.2"
   }
 }
