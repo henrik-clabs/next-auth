@@ -4,8 +4,22 @@ CONTAINER_NAME=authjs-strapi-test
 IMAGE_NAME=authjs-strapi-image
 CONTAINER_PORT="1337:1337"
 
-# FROM node:18-alpine3.18
-
+#
+# Dockerfile based on https://docs.strapi.io/dev-docs/installation/docker
+# Using Node v20 Alpine
+# Database: sqlite
+# Database file: database/testauthdata.db
+# Strapi is instantiated using the yarn create strapi starter app
+#   - Name: testauth
+#   - Options: No git, skip cloud, js, example, install, dbclient sqlite
+# The Strapi Super admin:
+#   - Email: strapi@noemail.com
+#   - Password: @authStrap1
+#   - Firstname= strapi, lastname=strapi
+# The docker build will create an API key with full access to everything
+# The Auth.js schema is stored in folder schema/src/api
+#   - auth-account, auth-session, auth-user, auth-verification-token
+#
 cat << EOF > test/dockerfile
 FROM node:20-alpine
 # Installing libvips-dev for sharp Compatibility
@@ -37,7 +51,12 @@ COPY --chown=node schema/src/api/auth-verification-token src/api/auth-verificati
 CMD ["yarn", "develop"]
 EOF
 
-
+# 
+# Generate API token using Strapi console
+#   - File in docker image: strapi_api_key.txt
+#   The file is extrated from the image and 
+#   content is added to the .env.local file
+#
 cat << EOF > test/strapi_console_input.txt
 const fs = require('node:fs');
 const attributes = { name: 'authjstest', description: 'Token for Auth.js strapi adapter testing', type: 'full-access',lifespan: null, };
@@ -48,7 +67,6 @@ EOF
 
 
 # Build image
-
 docker build -f test/dockerfile -t $IMAGE_NAME .
 RC=$?
 
@@ -87,5 +105,3 @@ else
   docker stop ${CONTAINER_NAME} && exit 1
 fi
 
-
-# docker run -ti -p 1337:1337 --hostname strapi --name strapi authjs-strapi-image
