@@ -57,7 +57,10 @@ if [ $RC -ne 0 ]; then
   exit 1
 fi
 
-# extract api key for tests
+# Clean up build files
+rm test/dockerfile test/strapi_console_input.txt
+
+# Extract api key for tests
 STRAPI_API_KEY=`docker run --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME} \
