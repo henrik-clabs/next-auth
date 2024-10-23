@@ -20,6 +20,7 @@ import type {
   AdapterUser,
   VerificationToken,
   AdapterSession,
+  AdapterAccount,
 } from "@auth/core/adapters"
 
 import { AxiosError, AxiosRequestConfig } from "axios"
@@ -573,6 +574,32 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         "auth-accounts",
         result1.data.data[0].documentId
       )
+    },
+    async getAccount(
+      providerAccountId: string,
+      provider: string
+    ): Promise<null | AdapterAccount> {
+      const config = get_filter_account_provider(provider, providerAccountId)
+      const result = await client.findAll("auth-accounts", config)
+
+      if (result.status != 200 || result.data.data.length == 0) return null
+
+      const out = {
+        id: result.data.data[0].documentId,
+        userId: result.data.data[0].userid,
+        provider: result.data.data[0].provider,
+        type: result.data.data[0].type,
+        providerAccountId: result.data.data[0].provider_accountid,
+        access_token: result.data.data[0].access_token,
+        expires_at: result.data.data[0].expires_at, // integer
+        refresh_token: result.data.data[0].refresh_token,
+        id_token: result.data.data[0].id_token,
+        scope: result.data.data[0].scope,
+        session_state: result.data.data[0].session_state,
+        token_type: result.data.data[0].token_type,
+      }
+
+      return out
     },
     async deleteUser(userId: string) {
       // Delete need to get the strapi document id
