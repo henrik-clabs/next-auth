@@ -57,27 +57,23 @@ if [ $RC -ne 0 ]; then
   exit 1
 fi
 
-##- if false; then
-
 # extract api key for tests
-KEY=`docker run --rm \
+API_KEY=`docker run --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME} \
   cat api_key.txt | grep API_ `
-
-#echo "Found key: $KEY..."
 
 docker run -d --rm \
   --name ${CONTAINER_NAME} \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME}
 
-##- fi
 echo "waiting 5s for db to start..."
 sleep 5
 
-# Setup Environment, add API_KEY to .env.local
-echo $KEY >> .env.local
+# Setup Environment, add STRAPI_URL and API_KEY to .env.local
+echo "STRAPI_URL=http://localhost:1337" > .env.local
+echo $API_KEY >> .env.local
 
 # Always stop container, but exit with 1 when tests are failing
 if vitest run -c ../utils/vitest.config.ts; then
