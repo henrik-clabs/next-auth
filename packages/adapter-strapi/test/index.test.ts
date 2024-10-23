@@ -13,7 +13,7 @@ var properties = propertiesReader(".env.local")
 
 const options: StrapiClientArgs = {
   baseUrl: properties.get("STRAPI_URL"),
-  apiKey: properties.get("API_KEY"),
+  apiKey: properties.get("STRAPI_API_KEY"),
 }
 
 const client = new Strapi(options)

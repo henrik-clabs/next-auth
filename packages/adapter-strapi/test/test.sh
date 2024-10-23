@@ -26,10 +26,10 @@ WORKDIR /opt/app/testauth
 RUN ["yarn", "build"]
 RUN ["yarn","strapi","admin:create","--email","strapi@noemail.com","--password","@uthStrap1","--firstname","strapi","--lastname","strapi"]
 RUN ["yarn","strapi","telemetry:disable"]
-# Create API Key
+# Create STRAPI API Key
 COPY ./test/strapi_console_input.txt strapi_console_input.txt
 RUN echo ".load strapi_console_input.txt" | yarn strapi console
-RUN cat api_key.txt
+RUN cat strapi_api_key.txt
 COPY --chown=node schema/src/api/auth-user src/api/auth-user
 COPY --chown=node schema/src/api/auth-session src/api/auth-session
 COPY --chown=node schema/src/api/auth-account src/api/auth-account
@@ -42,8 +42,8 @@ cat << EOF > test/strapi_console_input.txt
 const fs = require('node:fs');
 const attributes = { name: 'authjstest', description: 'Token for Auth.js strapi adapter testing', type: 'full-access',lifespan: null, };
 const apiToken = await strapi.service('admin::api-token').create(attributes);
-const out = "API_KEY=" + apiToken.accessKey;
-await fs.writeFileSync('api_key.txt', out);
+const out = "STRAPI_API_KEY=" + apiToken.accessKey;
+await fs.writeFileSync('strapi_api_key.txt', out);
 EOF
 
 
@@ -58,10 +58,10 @@ if [ $RC -ne 0 ]; then
 fi
 
 # extract api key for tests
-API_KEY=`docker run --rm \
+STRAPI_API_KEY=`docker run --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME} \
-  cat api_key.txt | grep API_ `
+  cat strapi_api_key.txt | grep STRAPI_API_ `
 
 docker run -d --rm \
   --name ${CONTAINER_NAME} \
@@ -71,9 +71,9 @@ docker run -d --rm \
 echo "waiting 5s for db to start..."
 sleep 5
 
-# Setup Environment, add STRAPI_URL and API_KEY to .env.local
+# Setup Environment, add STRAPI_URL and STRAPI_API_KEY to .env.local
 echo "STRAPI_URL=http://localhost:1337" > .env.local
-echo $API_KEY >> .env.local
+echo $STRAPI_API_KEY >> .env.local
 
 # Always stop container, but exit with 1 when tests are failing
 if vitest run -c ../utils/vitest.config.ts; then
