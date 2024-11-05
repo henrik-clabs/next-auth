@@ -81,11 +81,6 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       verificationToken: VerificationToken
     ): Promise<VerificationToken> {
       const { identifier, expires, token } = verificationToken
-      // const sql = `
-      //   INSERT INTO verification_token ( identifier, expires, token )
-      //   VALUES ($1, $2, $3)
-      //   `
-      //      await client.query(sql, [identifier, expires, token])
       const data = { identifier, expires, token }
       return db_create(client, "auth-verification-tokens", { data })
     },
@@ -103,24 +98,9 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // return result.rowCount !== 0 ? result.rows[0] : null
 
       try {
-        const config: AxiosRequestConfig = {
-          params: {
-            filters: {
-              $and: [
-                {
-                  identifier: {
-                    $eq: identifier,
-                  },
-                },
-                {
-                  token: {
-                    $eq: token,
-                  },
-                },
-              ],
-            },
-          },
-        }
+        const config = asfilter(
+          and(eq("identifier", identifier), eq("token", token))
+        )
 
         // Find the document id first
         const result = await client.findAll("auth-verification-tokens", config)
@@ -180,12 +160,12 @@ export default function StrapiAdapter(client: Strapi): Adapter {
     },
     async getUser(id: string) {
       // return found user or null if not found
-      const config = get_filter_authuser_id(id)
+      const config = asfilter(eq("authuser_id", id))
       return await userHelper(client, config)
     },
     async getUserByEmail(email: string) {
       // return found user or null if not found
-      const config: AxiosRequestConfig = get_filter_email(email)
+      const config = asfilter(eq("email", email))
       return await userHelper(client, config)
     },
     async getUserByAccount({
@@ -202,9 +182,11 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const result = await client.query(sql, [provider, providerAccountId])
       // return result.rowCount !== 0 ? result.rows[0] : null
 
-      const account_config: AxiosRequestConfig = get_filter_account_provider(
-        provider,
-        providerAccountId
+      const account_config = asfilter(
+        and(
+          eq("provider", provider),
+          eq("provider_accountid", providerAccountId)
+        )
       )
 
       const accounts = await client.findAll("auth-accounts", account_config)
@@ -215,7 +197,10 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       )
       if (accounts.status != 200 || accounts.data.data.length == 0) return null
 
-      const user_config = get_filter_authuser_id(accounts.data.data[0].userid)
+      const user_config = asfilter(
+        eq("authuser_id", accounts.data.data[0].userid)
+      )
+
       return await userHelper(client, user_config)
     },
     async updateUser(user: Partial<AdapterUser>): Promise<AdapterUser> {
@@ -224,7 +209,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const oldUser = query1.rows[0]
       try {
         console.log("updateUser input user", user)
-        const user_config = get_filter_authuser_id(user.id)
+        const user_config = asfilter(eq("authuser_id", user.id))
+
         const oldUser = await client.findAll("auth-users", user_config)
         console.log("updateUser input oldUser", oldUser.status, oldUser.data)
 
@@ -388,7 +374,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       //      return result.rows[0]
 
       const data = {
-        //        authsession_id: session.id,
+        //        TODO: authsession_id: session.id,
         session_token: sessionToken,
         expires: expires,
         userid: userId,
@@ -428,7 +414,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // }
       // const user = result2.rows[0]
 
-      const sessionfilter = get_filter_session_token(sessionToken)
+      const sessionfilter = asfilter(eq("session_token", sessionToken))
+
       const result1 = await client.findAll("auth-sessions", sessionfilter)
       console.log(
         "getSessionAndUser sessions resutl1",
@@ -445,7 +432,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         userId: result1.data.data[0].userid,
       }
 
-      const userfilter = get_filter_authuser_id(session.userId)
+      const userfilter = asfilter(eq("authuser_id", session.userId))
+
       const user = await userHelper(client, userfilter)
       if (user == null) return null
 
@@ -462,7 +450,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       //   `select * from sessions where "sessionToken" = $1`,
       //   [sessionToken]
       // )
-      const config = get_filter_session_token(sessionToken)
+      const config = asfilter(eq("session_token", sessionToken))
+
       try {
         const result1 = await client.findAll("auth-sessions", config)
 
@@ -521,7 +510,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       const sql = `delete from sessions where "sessionToken" = $1`
       // Get document id for session token
 
-      const config = get_filter_session_token(sessionToken)
+      const config = asfilter(eq("session_token", sessionToken))
       const result = await client.findAll("auth-sessions", config)
 
       await client.delete("auth-sessions", result.data.data[0].documentId)
@@ -531,7 +520,13 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const sql = `delete from accounts where "providerAccountId" = $1 and provider = $2`
       // await client.query(sql, [providerAccountId, provider])
 
-      const config = get_filter_account_provider(provider, providerAccountId)
+      const config = asfilter(
+        and(
+          eq("provider", provider),
+          eq("provider_accountid", providerAccountId)
+        )
+      )
+
       const result1 = await client.findAll("auth-accounts", config)
       const result = await client.delete(
         "auth-accounts",
@@ -542,7 +537,13 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       providerAccountId: string,
       provider: string
     ): Promise<null | AdapterAccount> {
-      const config = get_filter_account_provider(provider, providerAccountId)
+      const config = asfilter(
+        and(
+          eq("provider", provider),
+          eq("provider_accountid", providerAccountId)
+        )
+      )
+
       const result = await client.findAll("auth-accounts", config)
 
       if (result.status != 200 || result.data.data.length == 0) return null
@@ -566,8 +567,9 @@ export default function StrapiAdapter(client: Strapi): Adapter {
     },
     async deleteUser(userId: string) {
       // Delete need to get the strapi document id
-      const authuser_config = get_filter_authuser_id(userId)
-      const userid_config = get_filter_userid(userId)
+      const authuser_config = asfilter(eq("authuser_id", userId))
+      const userid_config = asfilter(eq("userid", userId))
+
       console.log(
         "deleteUser userId input",
         userId,
@@ -602,42 +604,6 @@ export default function StrapiAdapter(client: Strapi): Adapter {
   }
 }
 
-export function get_filter_account_provider(
-  provider: any,
-  providerAccountId: any
-): AxiosRequestConfig<any> {
-  return {
-    params: {
-      filters: {
-        $and: [
-          {
-            provider: {
-              $eq: provider,
-            },
-          },
-          {
-            provider_accountid: {
-              $eq: providerAccountId,
-            },
-          },
-        ],
-      },
-    },
-  }
-}
-
-export function get_filter_email(email: string): AxiosRequestConfig<any> {
-  return {
-    params: {
-      filters: {
-        email: {
-          $eq: email,
-        },
-      },
-    },
-  }
-}
-
 async function userHelper(client: Strapi, config: AxiosRequestConfig) {
   try {
     const result = await client.findAll("auth-users", config)
@@ -668,47 +634,56 @@ async function userHelper(client: Strapi, config: AxiosRequestConfig) {
   }
 }
 
-// Helpers to filter strapi queries
-export function get_filter_authuser_id(userid: string): AxiosRequestConfig {
-  const out: AxiosRequestConfig = {
-    params: {
-      filters: {
-        authuser_id: {
-          $eq: userid,
-        },
-      },
-    },
-  }
-  return out
-}
+// TODO: Look at Drizzle Where ..
+// async getAccount(providerAccountId: string, provider: string) {
+//   return client
+//     .select()
+//     .from(accountsTable)
+//     .where(
+//       and(
+//         eq(accountsTable.provider, provider),
+//         eq(accountsTable.providerAccountId, providerAccountId)
+//       )
+//     )
+//     .then((res) => res[0] ?? null) as Promise<AdapterAccount | null>
+// },
+// Need a createFilter()
+// check out https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
 
-export function get_filter_userid(userId: string): AxiosRequestConfig {
-  const out: AxiosRequestConfig = {
-    params: {
-      filters: {
-        userid: {
-          $eq: userId,
-        },
-      },
-    },
-  }
-  return out
-}
+// const out: AxiosRequestConfig = {
+//   params: {
+//     filters: {
+//       session_token: {
+//         $eq: sessionToken,
+//       },
+//     },
+//   },
 
-export function get_filter_session_token(
-  sessionToken: string
-): AxiosRequestConfig {
-  const out: AxiosRequestConfig = {
-    params: {
-      filters: {
-        session_token: {
-          $eq: sessionToken,
-        },
-      },
-    },
-  }
-  return out
-}
+// becomes:
+// create_parm_filter(eq(session_token,sessionToken))
+
+// and
+// params: {
+//   filters: {
+//     $and: [
+//       {
+//         provider: {
+//           $eq: provider,
+//         },
+//       },
+//       {
+//         provider_accountid: {
+//           $eq: providerAccountId,
+//         },
+//       },
+//     ],
+//   },
+// },
+// }
+// }
+// becomes:
+// create_parm_filter(and(eq(provider,provider),
+//                        eq(provider_accountid,providerAccountId)))
 
 /* Authenticator table from adapter-drizzle
 
@@ -743,3 +718,36 @@ export function get_filter_session_token(
       })
     ) satisfies DefaultMySqlAuthenticatorTable)
 */
+
+/**
+ * Equal predicate for Strapi Filters.
+ * @param parms : key, value
+ * @returns { key: { $eq: value }}
+ */
+export function eq(...parms: any): any {
+  const out = {}
+  const name = parms[0]
+  const value = parms[1]
+
+  // @ts-expect-error Parameter 'name' implicitly has an 'any' type.ts(7006)
+  out[name] = { $eq: value }
+
+  // create{ <name>: { $eq: <value> }}
+  //console.log("$$$$ eq ", parms, name, value, out)
+  return out
+}
+/**
+ * And predicate function for Strapi Filter
+ * @param parms : elements to by joined by AND
+ * @returns {$and:[p1, p2 ...]}
+ */
+export function and(...parms: any): any {
+  const out = { $and: Array.from(arguments) }
+  //console.log("$$$$ and ", parms, out)
+
+  return out
+}
+
+export function asfilter(a: any): AxiosRequestConfig {
+  return { params: { filters: a } }
+}

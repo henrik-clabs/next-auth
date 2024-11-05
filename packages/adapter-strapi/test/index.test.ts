@@ -1,9 +1,5 @@
 import { runBasicTests } from "utils/adapter"
-import StrapiAdapter, {
-  get_filter_authuser_id,
-  get_filter_session_token,
-  mapExpiresAt,
-} from "../src"
+import StrapiAdapter, { and, asfilter, eq, mapExpiresAt } from "../src"
 
 import Strapi, { StrapiClientArgs } from "strapi-sdk-ts"
 import { AxiosRequestConfig } from "axios"
@@ -33,7 +29,8 @@ runBasicTests({
     },
     user: async (id: string) => {
       // return found user or null if not found
-      const user_config = get_filter_authuser_id(id)
+      const user_config = asfilter(eq("authuser_id", id))
+
       console.log("runBasicTests user ", id, user_config)
       const result = await client.findAll("auth-users", user_config)
       console.log("runBasicTests user result ", result.data.data)
@@ -54,15 +51,9 @@ runBasicTests({
       //     select * from accounts where "providerAccountId" = $1`
       // const result = await client.query(sql, [account.providerAccountId])
       // return result.rowCount !== 0 ? mapExpiresAt(result.rows[0]) : null
-      const config: AxiosRequestConfig = {
-        params: {
-          filters: {
-            provider_accountid: {
-              $eq: account.providerAccountId,
-            },
-          },
-        },
-      }
+      const config = asfilter(
+        eq("provider_accountid", account.providerAccountId)
+      )
       const result = await client.findAll("auth-accounts", config)
       console.log(
         "index.test.ts account findAll results",
@@ -94,7 +85,8 @@ runBasicTests({
       //   [sessionToken]
       // )
       // return result1.rowCount !== 0 ? result1.rows[0] : null
-      const config = get_filter_session_token(sessionToken)
+      const config = asfilter(eq("session_token", sessionToken))
+
       console.log("runBasicTests session ", sessionToken)
       const result = await client.findAll("auth-sessions", config)
       console.log(
@@ -122,24 +114,10 @@ runBasicTests({
       // const result = await client.query(sql, [identifier, token])
       // return result.rowCount !== 0 ? result.rows[0] : null
 
-      const config: AxiosRequestConfig = {
-        params: {
-          filters: {
-            $and: [
-              {
-                identifier: {
-                  $eq: identifier,
-                },
-              },
-              {
-                token: {
-                  $eq: token,
-                },
-              },
-            ],
-          },
-        },
-      }
+      const config = asfilter(
+        and(eq("identifier", identifier), eq("token", token))
+      )
+
       console.log("runtest verificationToken input", identifier, token)
       const result = await client.findAll("auth-verification-tokens", config)
       console.log(
