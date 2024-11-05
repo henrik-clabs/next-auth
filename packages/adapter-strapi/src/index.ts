@@ -381,10 +381,9 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       if (userId === undefined) {
         throw Error(`userId is undef in createSession`)
       }
-      const sql = `insert into sessions ("userId", expires, "sessionToken")
-      values ($1, $2, $3)
-      RETURNING id, "sessionToken", "userId", expires`
-
+      //const sql = `insert into sessions ("userId", expires, "sessionToken")
+      //values ($1, $2, $3)
+      //RETURNING id, "sessionToken", "userId", expires`
       //      const result = await client.query(sql, [userId, expires, sessionToken])
       //      return result.rows[0]
 
@@ -394,46 +393,17 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         expires: expires,
         userid: userId,
       }
+      const result = await db_create(client, "auth-sessions", { data })
+      if (result == null) return null
 
-      console.log(
-        "createSession",
-        sessionToken,
-        userId,
-        expires,
-        expires.valueOf()
-      )
-      try {
-        const result = await client.create("auth-sessions", { data })
-        console.log(
-          "createSession result ",
-          result.status,
-          result.data,
-          result.data.error
-        )
-
-        const out = {
-          id: result.data.data.documentId, //TODO: Check if this is document id ?
-          sessionToken: result.data.data.session_token,
-          expires: new Date(result.data.data.expires),
-          userId: result.data.data.userid,
-        }
-        console.log("createSession returning out", out)
-        return out
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          const err = error as AxiosError
-          console.log(
-            "Error createSession ",
-            err.code,
-            err.response?.statusText,
-            err.response?.data.error
-          )
-        } else console.error("Error createSession ", error)
-
-        return null
+      const out = {
+        id: result.data.data.documentId, //TODO: Check if this is document id ?
+        sessionToken: result.data.data.session_token,
+        expires: new Date(result.data.data.expires),
+        userId: result.data.data.userid,
       }
+      return out
     },
-
     async getSessionAndUser(sessionToken: string | undefined): Promise<{
       session: AdapterSession
       user: AdapterUser
