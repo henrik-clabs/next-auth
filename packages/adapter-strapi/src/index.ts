@@ -58,6 +58,19 @@ export async function db_create(
       )
     } else console.error(error)
 
+    /*
+          console.log(
+            "Error StrapiAdapter createUser ",
+            error.message,
+            error.status,
+            error.name,
+            error.code,
+            error.response?.statusText,
+            error.request.path,
+            Object.keys(error)
+
+*/
+
     return Promise.resolve(null)
   }
 }
@@ -73,7 +86,6 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       //   VALUES ($1, $2, $3)
       //   `
       //      await client.query(sql, [identifier, expires, token])
-
       const data = { identifier, expires, token }
       return db_create(client, "auth-verification-tokens", { data })
     },
@@ -146,43 +158,25 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         return null
       }
     },
-
     async createUser(user: Omit<AdapterUser, "id">) {
-      try {
-        console.log("StrapiAdapter createUser ", user.id)
-        const data = {
-          authuser_id: user.id,
-          name: user.name,
-          email: user.email,
-          email_verified: user.emailVerified,
-          image: user.image,
-        }
-        const result = await client.create("auth-users", { data })
-
-        const out = {
-          id: result.data.data.authuser_id,
-          name: result.data.data.name,
-          email: result.data.data.email,
-          emailVerified: new Date(result.data.data.email_verified),
-          image: result.data.data.image,
-        }
-        console.log("StrapiAdapter createUser result", result.data, out)
-        return out
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          console.log(
-            "Error StrapiAdapter createUser ",
-            error.message,
-            error.status,
-            error.name,
-            error.code,
-            error.response?.statusText,
-            error.request.path,
-            Object.keys(error)
-          )
-        } else throw error
-        return null
+      const data = {
+        authuser_id: user.id,
+        name: user.name,
+        email: user.email,
+        email_verified: user.emailVerified,
+        image: user.image,
       }
+      const result = await db_create(client, "auth-users", { data })
+      if (result == null) return null
+
+      const out = {
+        id: result.data.data.authuser_id,
+        name: result.data.data.name,
+        email: result.data.data.email,
+        emailVerified: new Date(result.data.data.email_verified),
+        image: result.data.data.image,
+      }
+      return out
     },
     async getUser(id: string) {
       // return found user or null if not found
