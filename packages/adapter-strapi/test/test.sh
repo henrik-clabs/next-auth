@@ -89,8 +89,8 @@ docker run -d --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME}
 
-echo "waiting 5s for db to start..."
-sleep 5
+echo "waiting 25s for db to start..."
+sleep 25
 
 # Setup Environment, add STRAPI_URL and STRAPI_API_KEY to .env.local
 echo "STRAPI_URL=http://localhost:1337" > .env.local
