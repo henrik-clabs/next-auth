@@ -12,6 +12,8 @@
  * npm install next-auth @auth/strapi-adapter
  * ```
  *
+ *  TODO: check max length of tokens, imageurl: short vs long text
+ *
  * @module @auth/strapi-adapter
  */
 
@@ -25,7 +27,7 @@ import type {
 
 import { AxiosError, AxiosRequestConfig } from "axios"
 
-import Strapi from "strapi-sdk-ts"
+import Strapi, { StrapiResponse } from "strapi-sdk-ts"
 
 export function mapExpiresAt(account: any): any {
   const expires_at: number = parseInt(account.expires_at)
@@ -35,35 +37,45 @@ export function mapExpiresAt(account: any): any {
   }
 }
 
+export async function db_create(
+  client: Strapi,
+  type: string,
+  body: any
+): Promise<StrapiResponse<any> | null> {
+  try {
+    const result = await client.create(type, body)
+    console.log(
+      `create ${type} body `,
+      body,
+      ` result ${result.status},`,
+      result.data
+    )
+    return result
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      console.log(
+        `create ${type} error AxiosError error status ${error.response?.status} ${error.response?.statusText} config.data ${error.response?.config.data}, data.error ${error.response?.data.error}`
+      )
+    } else console.error(error)
+
+    return Promise.resolve(null)
+  }
+}
+
 export default function StrapiAdapter(client: Strapi): Adapter {
   return {
     async createVerificationToken(
       verificationToken: VerificationToken
     ): Promise<VerificationToken> {
-      try {
-        const { identifier, expires, token } = verificationToken
-        // const sql = `
-        //   INSERT INTO verification_token ( identifier, expires, token )
-        //   VALUES ($1, $2, $3)
-        //   `
-        //      await client.query(sql, [identifier, expires, token])
+      const { identifier, expires, token } = verificationToken
+      // const sql = `
+      //   INSERT INTO verification_token ( identifier, expires, token )
+      //   VALUES ($1, $2, $3)
+      //   `
+      //      await client.query(sql, [identifier, expires, token])
 
-        const data = { identifier, expires, token }
-        const result = await client.create("auth-verification-tokens", { data })
-        console.log("createVericationToken result", result.status, result.data)
-        return verificationToken
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          console.log(
-            "createVerificationToken error AxiosError",
-            error.response?.status,
-            error.response?.statusText,
-            error.response?.config.data,
-            error.response?.data.error
-          )
-        } else console.error(error)
-        return null
-      }
+      const data = { identifier, expires, token }
+      return db_create(client, "auth-verification-tokens", { data })
     },
     async useVerificationToken({
       identifier,
@@ -137,7 +149,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
 
     async createUser(user: Omit<AdapterUser, "id">) {
       try {
-        console.log("StrapiAdapter createUser ", user)
+        console.log("StrapiAdapter createUser ", user.id)
         const data = {
           authuser_id: user.id,
           name: user.name,
@@ -627,6 +639,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       )
 
       await client.delete("auth-users", user.data.data[0].documentId)
+
+      // TODO: there could be more rows to delete, since this is delete by userId !!
       await client.delete("auth-sessions", session.data.data[0].documentId)
       await client.delete("auth-accounts", account.data.data[0].documentId)
 
@@ -744,3 +758,37 @@ export function get_filter_session_token(
   }
   return out
 }
+
+/* Authenticator table from adapter-drizzle
+
+ const authenticatorsTable =
+    schema.authenticatorsTable ??
+    (mysqlTable(
+      "authenticator",
+      {
+        credentialID: varchar("credentialID", { length: 255 })
+          .notNull()
+          .unique(),
+        userId: varchar("userId", { length: 255 })
+          .notNull()
+          .references(() => usersTable.id, { onDelete: "cascade" }),
+        providerAccountId: varchar("providerAccountId", {
+          length: 255,
+        }).notNull(),
+        credentialPublicKey: varchar("credentialPublicKey", {
+          length: 255,
+        }).notNull(),
+        counter: int("counter").notNull(),
+        credentialDeviceType: varchar("credentialDeviceType", {
+          length: 255,
+        }).notNull(),
+        credentialBackedUp: boolean("credentialBackedUp").notNull(),
+        transports: varchar("transports", { length: 255 }),
+      },
+      (authenticator) => ({
+        compositePk: primaryKey({
+          columns: [authenticator.userId, authenticator.credentialID],
+        }),
+      })
+    ) satisfies DefaultMySqlAuthenticatorTable)
+*/
