@@ -1,8 +1,7 @@
 import { runBasicTests } from "utils/adapter"
-import StrapiAdapter, { and, asfilter, eq, mapExpiresAt } from "../src"
+import StrapiAdapter, { and, as_filter, eq } from "../src"
 
 import Strapi, { StrapiClientArgs } from "strapi-sdk-ts"
-import { AxiosRequestConfig } from "axios"
 
 var propertiesReader = require("properties-reader")
 var properties = propertiesReader(".env.local")
@@ -29,7 +28,7 @@ runBasicTests({
     },
     user: async (id: string) => {
       // return found user or null if not found
-      const user_config = asfilter(eq("authuser_id", id))
+      const user_config = as_filter(eq("authuser_id", id))
 
       console.log("runBasicTests user ", id, user_config)
       const result = await client.findAll("auth-users", user_config)
@@ -51,7 +50,7 @@ runBasicTests({
       //     select * from accounts where "providerAccountId" = $1`
       // const result = await client.query(sql, [account.providerAccountId])
       // return result.rowCount !== 0 ? mapExpiresAt(result.rows[0]) : null
-      const config = asfilter(
+      const config = as_filter(
         eq("provider_accountid", account.providerAccountId)
       )
       const result = await client.findAll("auth-accounts", config)
@@ -85,7 +84,7 @@ runBasicTests({
       //   [sessionToken]
       // )
       // return result1.rowCount !== 0 ? result1.rows[0] : null
-      const config = asfilter(eq("session_token", sessionToken))
+      const config = as_filter(eq("session_token", sessionToken))
 
       console.log("runBasicTests session ", sessionToken)
       const result = await client.findAll("auth-sessions", config)
@@ -114,7 +113,7 @@ runBasicTests({
       // const result = await client.query(sql, [identifier, token])
       // return result.rowCount !== 0 ? result.rows[0] : null
 
-      const config = asfilter(
+      const config = as_filter(
         and(eq("identifier", identifier), eq("token", token))
       )
 

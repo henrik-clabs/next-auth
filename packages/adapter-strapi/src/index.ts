@@ -98,7 +98,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // return result.rowCount !== 0 ? result.rows[0] : null
 
       try {
-        const config = asfilter(
+        const config = as_filter(
           and(eq("identifier", identifier), eq("token", token))
         )
 
@@ -160,12 +160,12 @@ export default function StrapiAdapter(client: Strapi): Adapter {
     },
     async getUser(id: string) {
       // return found user or null if not found
-      const config = asfilter(eq("authuser_id", id))
+      const config = as_filter(eq("authuser_id", id))
       return await userHelper(client, config)
     },
     async getUserByEmail(email: string) {
       // return found user or null if not found
-      const config = asfilter(eq("email", email))
+      const config = as_filter(eq("email", email))
       return await userHelper(client, config)
     },
     async getUserByAccount({
@@ -182,7 +182,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const result = await client.query(sql, [provider, providerAccountId])
       // return result.rowCount !== 0 ? result.rows[0] : null
 
-      const account_config = asfilter(
+      const account_config = as_filter(
         and(
           eq("provider", provider),
           eq("provider_accountid", providerAccountId)
@@ -197,7 +197,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       )
       if (accounts.status != 200 || accounts.data.data.length == 0) return null
 
-      const user_config = asfilter(
+      const user_config = as_filter(
         eq("authuser_id", accounts.data.data[0].userid)
       )
 
@@ -209,7 +209,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const oldUser = query1.rows[0]
       try {
         console.log("updateUser input user", user)
-        const user_config = asfilter(eq("authuser_id", user.id))
+        const user_config = as_filter(eq("authuser_id", user.id))
 
         const oldUser = await client.findAll("auth-users", user_config)
         console.log("updateUser input oldUser", oldUser.status, oldUser.data)
@@ -414,7 +414,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // }
       // const user = result2.rows[0]
 
-      const sessionfilter = asfilter(eq("session_token", sessionToken))
+      const sessionfilter = as_filter(eq("session_token", sessionToken))
 
       const result1 = await client.findAll("auth-sessions", sessionfilter)
       console.log(
@@ -432,7 +432,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         userId: result1.data.data[0].userid,
       }
 
-      const userfilter = asfilter(eq("authuser_id", session.userId))
+      const userfilter = as_filter(eq("authuser_id", session.userId))
 
       const user = await userHelper(client, userfilter)
       if (user == null) return null
@@ -450,7 +450,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       //   `select * from sessions where "sessionToken" = $1`,
       //   [sessionToken]
       // )
-      const config = asfilter(eq("session_token", sessionToken))
+      const config = as_filter(eq("session_token", sessionToken))
 
       try {
         const result1 = await client.findAll("auth-sessions", config)
@@ -510,7 +510,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       const sql = `delete from sessions where "sessionToken" = $1`
       // Get document id for session token
 
-      const config = asfilter(eq("session_token", sessionToken))
+      const config = as_filter(eq("session_token", sessionToken))
       const result = await client.findAll("auth-sessions", config)
 
       await client.delete("auth-sessions", result.data.data[0].documentId)
@@ -520,7 +520,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       // const sql = `delete from accounts where "providerAccountId" = $1 and provider = $2`
       // await client.query(sql, [providerAccountId, provider])
 
-      const config = asfilter(
+      const config = as_filter(
         and(
           eq("provider", provider),
           eq("provider_accountid", providerAccountId)
@@ -537,7 +537,7 @@ export default function StrapiAdapter(client: Strapi): Adapter {
       providerAccountId: string,
       provider: string
     ): Promise<null | AdapterAccount> {
-      const config = asfilter(
+      const config = as_filter(
         and(
           eq("provider", provider),
           eq("provider_accountid", providerAccountId)
@@ -567,8 +567,8 @@ export default function StrapiAdapter(client: Strapi): Adapter {
     },
     async deleteUser(userId: string) {
       // Delete need to get the strapi document id
-      const authuser_config = asfilter(eq("authuser_id", userId))
-      const userid_config = asfilter(eq("userid", userId))
+      const authuser_config = as_filter(eq("authuser_id", userId))
+      const userid_config = as_filter(eq("userid", userId))
 
       console.log(
         "deleteUser userId input",
@@ -634,57 +634,6 @@ async function userHelper(client: Strapi, config: AxiosRequestConfig) {
   }
 }
 
-// TODO: Look at Drizzle Where ..
-// async getAccount(providerAccountId: string, provider: string) {
-//   return client
-//     .select()
-//     .from(accountsTable)
-//     .where(
-//       and(
-//         eq(accountsTable.provider, provider),
-//         eq(accountsTable.providerAccountId, providerAccountId)
-//       )
-//     )
-//     .then((res) => res[0] ?? null) as Promise<AdapterAccount | null>
-// },
-// Need a createFilter()
-// check out https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
-
-// const out: AxiosRequestConfig = {
-//   params: {
-//     filters: {
-//       session_token: {
-//         $eq: sessionToken,
-//       },
-//     },
-//   },
-
-// becomes:
-// create_parm_filter(eq(session_token,sessionToken))
-
-// and
-// params: {
-//   filters: {
-//     $and: [
-//       {
-//         provider: {
-//           $eq: provider,
-//         },
-//       },
-//       {
-//         provider_accountid: {
-//           $eq: providerAccountId,
-//         },
-//       },
-//     ],
-//   },
-// },
-// }
-// }
-// becomes:
-// create_parm_filter(and(eq(provider,provider),
-//                        eq(provider_accountid,providerAccountId)))
-
 /* Authenticator table from adapter-drizzle
 
  const authenticatorsTable =
@@ -721,8 +670,8 @@ async function userHelper(client: Strapi, config: AxiosRequestConfig) {
 
 /**
  * Equal predicate for Strapi Filters.
- * @param parms : key, value
- * @returns { key: { $eq: value }}
+ * @param parms : column, value
+ * @returns { column: { $eq: value }}
  */
 export function eq(...parms: any): any {
   const out = {}
@@ -748,6 +697,16 @@ export function and(...parms: any): any {
   return out
 }
 
-export function asfilter(a: any): AxiosRequestConfig {
+/**
+ * Create filter parameter for Strapi Requests
+ * Can be used with predicates for And and Eq
+ *
+ * const user = await client.findAll("auth-users", as_filter(eq("email","a.b@email.com")))
+ * const user = await client.findAll("auth-users", as_filter(and(eq("email","a.b@email.com"),eq("name","Amorikie"))))
+ *
+ * @param a
+ * @returns {params: {filters: {...}}}
+ */
+export function as_filter(a: any): AxiosRequestConfig {
   return { params: { filters: a } }
 }
