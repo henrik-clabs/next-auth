@@ -357,38 +357,25 @@ export default function StrapiAdapter(client: Strapi): Adapter {
         token_type: account.token_type,
       }
 
-      try {
-        const result = await client.create("auth-accounts", { data })
-        console.log("linkAccount", result.status, result.data)
+      const result = await db_create(client, "auth-accounts", { data })
+      if (result == null) return null
 
-        const out = {
-          id: result.data.data.documentId,
-          userId: result.data.data.userid,
-          provider: result.data.data.provider,
-          type: result.data.data.type,
-          providerAccountId: result.data.data.provider_accountid,
-          access_token: result.data.data.access_token,
-          expires_at: result.data.data.expires_at, // integer
-          refresh_token: result.data.data.refresh_token,
-          id_token: result.data.data.id_token,
-          scope: result.data.data.scope,
-          session_state: result.data.data.session_state,
-          token_type: result.data.data.token_type,
-        }
-
-        return out
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          console.log(
-            "linkAccount error AxiosError",
-            error.response?.status,
-            error.response?.statusText,
-            error.response?.config.data,
-            error.response?.data.error
-          )
-        } else console.log("linkAccount error", error)
-        return null
+      const out = {
+        id: result.data.data.documentId,
+        userId: result.data.data.userid,
+        provider: result.data.data.provider,
+        type: result.data.data.type,
+        providerAccountId: result.data.data.provider_accountid,
+        access_token: result.data.data.access_token,
+        expires_at: result.data.data.expires_at, // integer
+        refresh_token: result.data.data.refresh_token,
+        id_token: result.data.data.id_token,
+        scope: result.data.data.scope,
+        session_state: result.data.data.session_state,
+        token_type: result.data.data.token_type,
       }
+
+      return out
     },
     async createSession({ sessionToken, userId, expires }) {
       if (userId === undefined) {
