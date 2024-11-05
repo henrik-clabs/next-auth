@@ -1,8 +1,8 @@
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16}}>
- *  <p>An official <a href="https://www.postgresql.org/">PostgreSQL</a> adapter for Auth.js / NextAuth.js.</p>
- *  <a href="https://www.postgresql.org/">
- *   <img style={{display: "block"}} src="/img/adapters/pg.svg" width="48" />
+ *  <p>An official <a href="https://strapi.io/">Strapi</a> adapter for Auth.js / NextAuth.js.</p>
+ *  <a href="https://strapi.io/">
+ *   <img style={{display: "block"}} src="/img/adapters/strapi.svg" width="48" />
  *  </a>
  * </div>
  *
