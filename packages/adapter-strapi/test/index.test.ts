@@ -105,7 +105,7 @@ runBasicTests({
       }
       return out
     },
-    async verificationToken(identifier_token) {
+    verificationToken: async (identifier_token) => {
       const { identifier, token } = identifier_token
       // const sql = `
       //     select * from verification_token where identifier = $1 and token = $2`
