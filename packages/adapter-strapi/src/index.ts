@@ -670,8 +670,13 @@ async function userHelper(client: Strapi, config: AxiosRequestConfig) {
 
 /**
  * Equal predicate for Strapi Filters.
- * @param parms : column, value
- * @returns { column: { $eq: value }}
+ *
+ * @example
+ * const name_filter = eq("name","logan")
+ * // { name: { $eq: "logan" }}
+ *
+ * @param ...parms : column, value
+ * @returns any { column: { $eq: value }}
  */
 export function eq(...parms: any): any {
   const out = {}
@@ -680,20 +685,21 @@ export function eq(...parms: any): any {
 
   // @ts-expect-error Parameter 'name' implicitly has an 'any' type.ts(7006)
   out[name] = { $eq: value }
-
-  // create{ <name>: { $eq: <value> }}
-  //console.log("$$$$ eq ", parms, name, value, out)
   return out
 }
+
 /**
  * And predicate function for Strapi Filter
+ *
+ * @example
+ * const fullname = and( eq("first","logan"), eq("last","droid"))
+ * // { $and:[{first: {$eq: "logan"}},{last: {$eq: "droid"}}]}
+ *
  * @param parms : elements to by joined by AND
- * @returns {$and:[p1, p2 ...]}
+ * @returns any {$and:[p1, p2 ...]}
  */
 export function and(...parms: any): any {
   const out = { $and: Array.from(arguments) }
-  //console.log("$$$$ and ", parms, out)
-
   return out
 }
 
@@ -701,12 +707,13 @@ export function and(...parms: any): any {
  * Create filter parameter for Strapi Requests
  * Can be used with predicates for And and Eq
  *
+ * @example
  * const user = await client.findAll("auth-users", as_filter(eq("email","a.b@email.com")))
  * const user = await client.findAll("auth-users", as_filter(and(eq("email","a.b@email.com"),eq("name","Amorikie"))))
  *
- * @param a
- * @returns {params: {filters: {...}}}
+ * @param predicates
+ * @returns AxiosRequestConfig {params: {filters: { predicates }}}
  */
-export function as_filter(a: any): AxiosRequestConfig {
-  return { params: { filters: a } }
+export function as_filter(predicates: any): AxiosRequestConfig {
+  return { params: { filters: predicates } }
 }
