@@ -84,6 +84,17 @@ STRAPI_API_KEY=`docker run --rm \
   ${IMAGE_NAME} \
   cat strapi_api_key.txt | grep STRAPI_API_ `
 
+STRAPI_VERSION=`docker run --rm \
+  -p ${CONTAINER_PORT} \
+  ${IMAGE_NAME} \
+  yarn strapi version | tail -n 2 | head -n 1`
+
+# Setup Environment, add STRAPI_URL and STRAPI_API_KEY to .env.local
+echo "# Built for Strapi version $STRAPI_VERSION" > .env.local
+echo "STRAPI_URL=http://localhost:1337" >> .env.local
+echo $STRAPI_API_KEY >> .env.local
+
+# Starting container
 docker run -d --rm \
   --name ${CONTAINER_NAME} \
   -p ${CONTAINER_PORT} \
@@ -91,10 +102,6 @@ docker run -d --rm \
 
 echo "waiting 25s for db to start..."
 sleep 25
-
-# Setup Environment, add STRAPI_URL and STRAPI_API_KEY to .env.local
-echo "STRAPI_URL=http://localhost:1337" > .env.local
-echo $STRAPI_API_KEY >> .env.local
 
 # Always stop container, but exit with 1 when tests are failing
 if vitest run -c ../utils/vitest.config.ts; then
