@@ -84,6 +84,7 @@ STRAPI_API_KEY=`docker run --rm \
   ${IMAGE_NAME} \
   cat strapi_api_key.txt | grep STRAPI_API_ `
 
+# Extract Strapi version
 STRAPI_VERSION=`docker run --rm \
   -p ${CONTAINER_PORT} \
   ${IMAGE_NAME} \
